@@ -5,10 +5,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import com.geccocrawler.gecco.seed.Seed;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -278,6 +280,18 @@ public class GeccoEngine extends Thread {
 		}
 		return this;
 	}
+
+
+	/**
+	 * 解析初始化的种子信息
+	 *
+	 * @return 种子列表
+	 */
+	private List<Seed> resolveSeeds() {
+		return Collections.emptyList();
+	}
+
+
 
 	public Scheduler getScheduler() {
 		return scheduler;

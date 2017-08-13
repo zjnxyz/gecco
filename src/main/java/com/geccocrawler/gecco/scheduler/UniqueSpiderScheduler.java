@@ -3,6 +3,7 @@ package com.geccocrawler.gecco.scheduler;
 import java.util.Comparator;
 import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,8 +42,17 @@ public class UniqueSpiderScheduler implements Scheduler {
 	public HttpRequest out() {
 		SortHttpRequest sortHttpRequest = set.pollFirst();
 		if(sortHttpRequest == null) {
-			return null;
-		}
+            //第一次未渠道数据，可能是由于预热不够，因此休眠5s后，再取
+            try {
+                TimeUnit.SECONDS.sleep(5);
+                sortHttpRequest = set.pollFirst();
+            } catch (InterruptedException e) {
+                log.warn("线程异常", e);
+            }
+            if (sortHttpRequest == null) {
+                return null;
+            }
+        }
 		long priority = sortHttpRequest.getPriority();
 		HttpRequest request = sortHttpRequest.getHttpRequest();
 		if(request != null && log.isDebugEnabled()) {

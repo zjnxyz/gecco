@@ -38,6 +38,8 @@ public class Spider implements Runnable {
 	private GeccoEngine engine;
 	
 	private Scheduler spiderScheduler;
+
+	private SpiderJob job;
 	
 	/**
 	 * 当前待渲染的bean
@@ -45,10 +47,15 @@ public class Spider implements Runnable {
 	public Class<? extends SpiderBean> currSpiderBeanClass;
 	
 	public Spider(GeccoEngine engine) {
+		this(engine, null);
+	}
+
+	public Spider(GeccoEngine engine, SpiderJob job) {
 		this.engine = engine;
-		this.spiderScheduler = new UniqueSpiderScheduler();
+		this.spiderScheduler = job == null ? new UniqueSpiderScheduler() : job.getSpiderScheduler();
 		this.pause = false;
 		this.stop = false;
+		this.job = job;
 	}
 	
 	public void run() {
@@ -57,8 +64,7 @@ public class Spider implements Runnable {
 		while(true) {
 			//停止
 			if(stop) {
-				//告知engine线程执行结束
-				engine.notifyComplete();
+				notifyComplete();
 				break;
 			}
 			//暂停抓取
@@ -70,17 +76,21 @@ public class Spider implements Runnable {
 				}
 			}
 			//获取待抓取的url
-			boolean start = false;
+//			boolean start = false;
 			HttpRequest request = spiderScheduler.out();
-			if(request == null) {
-				//startScheduler
-				request = engine.getScheduler().out();
-				if(request == null) {
-					//告知engine线程执行结束
-					engine.notifyComplete();
-					break;
-				}
-				start = true;
+//			if(request == null) {
+//				//startScheduler
+//				request = engine.getScheduler().out();
+//				if(request == null) {
+//					//告知engine线程执行结束
+//					engine.notifyComplete();
+//					break;
+//				}
+//				start = true;
+//			}
+			if (request == null) {
+				notifyComplete();
+				break;
 			}
 			if(log.isDebugEnabled()) {
 				log.debug("match url : " + request.getUrl());
@@ -127,10 +137,10 @@ public class Spider implements Runnable {
 			//抓取间隔
 			interval();
 			//开始地址放入队尾重新抓取
-			if(start && engine.isLoop()) {
-				//如果是一个开始抓取请求，再返回开始队列中
-				engine.getScheduler().into(request);
-			}
+//			if(start && engine.isLoop()) {
+//				//如果是一个开始抓取请求，再返回开始队列中
+//				engine.getScheduler().into(request);
+//			}
 		}
 	}
 	
@@ -226,6 +236,19 @@ public class Spider implements Runnable {
 		}
 		int max = interval + 1000;
 		return (int)Math.rint(Math.random()*(max-min)+min);
+	}
+
+	/**
+	 * 通知线程已经完成
+	 */
+	private void notifyComplete() {
+		if (job != null) {
+			//通知工作线程已经完成
+			job.notifyComplete();
+		} else {
+			//告知engine线程执行结束
+			engine.notifyComplete();
+		}
 	}
 	
 	public GeccoEngine getEngine() {

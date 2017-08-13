@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.geccocrawler.gecco.seed.Seed;
 import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSON;
@@ -24,8 +25,13 @@ public abstract class AbstractHttpRequest implements HttpRequest, Comparable<Htt
 	private Map<String, String> headers;
 	
 	private long priority;
-	
-	public AbstractHttpRequest() {
+
+    /**
+     * 请求种子信息
+     */
+    private Seed seed;
+
+    public AbstractHttpRequest() {
 		this.parameters = new HashMap<String, String>(1);
 		this.headers = new HashMap<String, String>(1);
 		this.cookies = new HashMap<String, String>(1);
@@ -156,9 +162,28 @@ public abstract class AbstractHttpRequest implements HttpRequest, Comparable<Htt
 	}
 
 	@Override
-	public void setUrl(String url) {
-		this.url = StringUtils.substringBefore(url, "#");
-	}
+    public void setUrl(String url) {
+        this.url = StringUtils.substringBefore(url, "#");
+    }
+
+    public Seed getSeed() {
+        return seed;
+    }
+
+    /**
+     * 将seed中数据copy到request中
+     *
+     * @param seed 种子
+     */
+    public void setSeed(Seed seed) {
+        this.seed = seed;
+        this.setUrl(seed.getUrl());
+        this.setCharset(seed.getCharset());
+        this.setCookies(seed.getCookies());
+        this.setParameters(seed.getParams());
+        this.setHeaders(seed.getHeaders());
+        this.refer(seed.getRefer());
+    }
 
 	/**
 	 * 数字小，优先级高  
